@@ -1,0 +1,9 @@
+train: /Users/dimonster/Desktop/homework/ML/ML-Bottlenose-Dolphins/yolo/train/images  # path to training images
+val: /Users/dimonster/Desktop/homework/ML/ML-Bottlenose-Dolphins/yolo/val/images      # path to validation images
+
+# Number of classes
+nc: 1  # one class
+
+# Class names
+names:
+  0: fin
