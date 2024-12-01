@@ -1,0 +1,6 @@
+site_name: Bottlenose Dolphins Fin Recognition
+nav:
+  - Home: index.md
+  - Guide: guide.md
+theme:
+  name: material
