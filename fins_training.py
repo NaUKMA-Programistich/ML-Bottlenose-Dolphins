@@ -4,15 +4,14 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from matplotlib import pyplot as plt
-from torchvision import datasets, transforms, models
 from torch.utils.data import DataLoader, random_split
+from torchvision import datasets, models, transforms
 from torchvision.models import ResNet18_Weights
 
 DATA_DIR = 'fins'
 MODEL_PATH = 'fins/fins.pt'
 BATCH_SIZE = 32
 NUM_EPOCHS = 10
-
 
 val_transform = transforms.Compose([
     transforms.Resize((224, 224)),
@@ -23,12 +22,15 @@ val_transform = transforms.Compose([
     )
 ])
 
+
 def display_result(dataset, device, model, val_transform):
+    """Display model predictions on random images from the dataset."""
     dataset.transform = val_transform
     indices = random.sample(range(len(dataset)), 10)
     images = []
     predicted_labels = []
     true_labels = []
+
     model.eval()
     with torch.no_grad():
         for idx in indices:
@@ -39,20 +41,27 @@ def display_result(dataset, device, model, val_transform):
             images.append(img)
             predicted_labels.append(dataset.classes[pred.item()])
             true_labels.append(dataset.classes[label])
+
     fig, axes = plt.subplots(2, 5, figsize=(15, 6))
     axes = axes.flatten()
-    for img, pred_label, true_label, ax in zip(images, predicted_labels, true_labels, axes):
-        img = img * torch.tensor([0.229, 0.224, 0.225]).unsqueeze(1).unsqueeze(2) + \
-              torch.tensor([0.485, 0.456, 0.406]).unsqueeze(1).unsqueeze(2)
+    for img, pred_label, true_label, ax in zip(
+            images, predicted_labels, true_labels, axes):
+        img = (
+            img * torch.tensor([0.229, 0.224, 0.225]).unsqueeze(1).unsqueeze(2) +
+            torch.tensor([0.485, 0.456, 0.406]).unsqueeze(1).unsqueeze(2)
+        )
         img = img.clamp(0, 1)
         img = img.permute(1, 2, 0).cpu().numpy()
         ax.imshow(img)
         ax.set_title(f"Pred: {pred_label}\nTrue: {true_label}")
         ax.axis('off')
+
     plt.tight_layout()
     plt.savefig('fins/random_ten.png')
 
+
 def main():
+    """Main function to train and evaluate the model."""
     # Create dataset
     train_transform = transforms.Compose([
         transforms.Resize((224, 224)),
@@ -64,7 +73,12 @@ def main():
             transforms.RandomRotation(degrees=30),
             transforms.RandomRotation(degrees=45)
         ]),
-        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2),
+        transforms.ColorJitter(
+            brightness=0.2,
+            contrast=0.2,
+            saturation=0.2,
+            hue=0.2
+        ),
         transforms.RandomGrayscale(p=0.1),
         transforms.ToTensor(),
         transforms.Normalize(
@@ -87,11 +101,14 @@ def main():
     train_dataset.dataset.transform = train_transform
     val_dataset.dataset.transform = val_transform
 
-    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
+    train_loader = DataLoader(
+        train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+    val_loader = DataLoader(
+        val_dataset, batch_size=BATCH_SIZE, shuffle=False)
+
     print(f"Train Size: {train_size}, Validation Size: {val_size}")
 
-    device = torch.device("mps" if torch.mps.is_available() else "cpu")
+    device = torch.device("mps" if torch.has_mps else "cpu")
     print(f"Device: {device}")
 
     # Create model
@@ -102,7 +119,8 @@ def main():
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=1e-4)
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
+    scheduler = optim.lr_scheduler.StepLR(
+        optimizer, step_size=5, gamma=0.1)
 
     best_accuracy = 0.0
 
@@ -150,16 +168,19 @@ def main():
 
         scheduler.step()
 
-        print(f"Epoch {epoch+1}/{NUM_EPOCHS}, "
-              f"Train Loss: {epoch_loss:.4f}, "
-              f"Val Loss: {val_loss:.4f}, "
-              f"Val Accuracy: {val_accuracy:.4f}")
+        print(
+            f"Epoch {epoch + 1}/{NUM_EPOCHS}, "
+            f"Train Loss: {epoch_loss:.4f}, "
+            f"Val Loss: {val_loss:.4f}, "
+            f"Val Accuracy: {val_accuracy:.4f}"
+        )
 
     print(f"Best Validation Accuracy: {best_accuracy:.4f}")
     print(f"Model saved to {MODEL_PATH}")
 
     # Check correctness of the model
     display_result(dataset, device, model, val_transform)
+
 
 if __name__ == '__main__':
     main()
