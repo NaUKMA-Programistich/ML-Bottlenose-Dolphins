@@ -1,0 +1,36 @@
+name: Run tests
+
+on: [push]
+
+jobs:
+  run-tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ 3.12 ]
+        os: [ ubuntu-latest ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest ruff
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Lint with Ruff
+        run: |
+          ruff --format=github --target-version=py37 .
+        continue-on-error: true
+
+      - name: Test with pytest
+        run: |
+          pytest --yolo-loc="yolo" tests/code
+          pytest --dataset-loc="fins" tests/data
