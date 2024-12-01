@@ -2,14 +2,14 @@ import numpy as np
 import torch
 from PIL import Image
 from matplotlib import pyplot as plt
-from torchvision import transforms, models
-from torchvision.models import ResNet18_Weights
 from ultralytics import YOLO
 
 from fins_training import val_transform
 
 yolo_model = YOLO("yolo/best.pt")
-dataset_dir = 'dataset/random'
+dataset_dir = 'dataset/1056'
+MODEL_PATH = 'fins/fins.pt'
+class_names = ['1056', 'random']
 
 import os
 import rawpy
@@ -28,16 +28,12 @@ for image_file in os.listdir(dataset_dir):
         imageio.imsave(jpg_path, rgb)
         os.remove(raw_path)
 
-
 device = torch.device("mps" if torch.mps.is_available() else "cpu")
-checkpoint = torch.load("fins/fins.pt", map_location=device)
-model = models.resnet18(weights=ResNet18_Weights.DEFAULT)
-model.fc = torch.nn.Linear(model.fc.in_features, len(checkpoint['class_names']))
+model = torch.load(MODEL_PATH, map_location=device)
 model = model.to(device)
-model.load_state_dict(checkpoint['model_state_dict'])
 model.eval()
 
-for image_file in np.random.choice(os.listdir(dataset_dir), size=5):
+for image_file in np.random.choice(os.listdir(dataset_dir), size=10):
     if not image_file.endswith('.JPG'):
         print("Skipping", image_file)
         continue
@@ -60,7 +56,7 @@ for image_file in np.random.choice(os.listdir(dataset_dir), size=5):
             with torch.no_grad():
                 output = model(input_img)
                 _, pred = torch.max(output, 1)
-                predicted_class = checkpoint['class_names'][pred.item()]
+                predicted_class = class_names[pred.item()]
 
             rect = plt.Rectangle((x_min, y_min), x_max - x_min, y_max - y_min,
                                  edgecolor='red', linewidth=2, fill=False)

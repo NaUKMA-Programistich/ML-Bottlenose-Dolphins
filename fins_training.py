@@ -146,10 +146,7 @@ def main():
 
         if val_accuracy > best_accuracy:
             best_accuracy = val_accuracy
-            torch.save({
-                'model_state_dict': model.state_dict(),
-                'class_names': dataset.classes
-            }, MODEL_PATH)
+            torch.save(model, MODEL_PATH)
 
         scheduler.step()
 
