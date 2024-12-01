@@ -9,6 +9,16 @@ Base: [Dataset](https://www.abdn.ac.uk/sbs/outreach/lighthouse/gallery/album13/?
 
 Idea: [Reference](https://onlinelibrary.wiley.com/doi/epdf/10.1111/mms.12849)
 
+### Usage
+
+```bash
+pip install -r requirements.txt
+```
+
+```python
+python3 cli.py --data_folder <path_to_data_folder> --device <device_name> --size <number_of_images>
+```
+
 ### Results 
 Results on 10 randomly-picked fin's images:
 
